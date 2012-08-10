@@ -155,11 +155,15 @@ class Transaction {
 
 	public function commit(){
 		$entry = $this->get_log_entry();
-		return $entry ? $this->_write_to_file( $entry ) : false;
+		if( is_a( $entry, "Exception" ) ){
+			return 'There was a problem with the transaction. Please try again.';
+		} else {
+			return $this->_write_to_log( $entry );
+		}
 	}
 
-	private function  _write_to_file( $entry ){
-
+	private function  _write_to_log( $entry ){
+		return "The following entry was written to the log file:<br/>$entry";
 	}
 
 	public function get_log_entry(){
@@ -169,32 +173,61 @@ class Transaction {
 		$entry = $string_type;
 
 		$level = $this->_set_required_field_group_level();
+		
+		$errors = array();
 
 		for($i=0;$i<=$level;$i++){
 			$group = $this->log_entry_field_groups[$i];
+			$group_errors = array();
+
 			if(!empty($group)){
-				foreach($group as $field_name => $required){
-					$entry .= $this->log_field_delimiter;
-					try {
-						
+				if( $this->_is_group_empty( $group ) && $i != 0 ){
+					foreach($group as $field){
+						//Add the blank field
+						$entry .= $this->log_field_delimiter . $this->log_field_delimiter;
+					}
+				} else {
+					foreach($group as $field_name => $required){
+						$entry .= $this->log_field_delimiter;
+	
 						$field = $this->_get_field_by_name( $field_name );
 						if( !$field && $required ){
-							throw new Exception;
+							array_push( $group_errors, $field_name );
 						} elseif( $field ) {
 							$entry .= $this->_get_loggified_field_value( $field );
 						}	
-						
-					} catch( Exception $e ) {
-						//trigger_error('The required field "' . $field_name . '" was left empty.', E_WARNING);
-						die('The required field "' . $field_name . '" was left empty.');
-						return false;
+					}
+					if( !empty($group_errors ) ){
+						array_push( $errors, $group_errors );
 					}
 				}
-			}
+			}	
 		}
+		/**
+		 Kill the process before writing to the transaction file
+		 */
+		try {
+			if( !empty( $errors ) ){
+				throw new Exception( print_r( $errors, true ) );
+			}
+		} catch ( Exception $e ) {
+			return $e;
+		}
+
 		return $entry;
 	}
+	private function _is_group_empty( $group ){
+		$total_count = count( $group );
 
+		$incremental_count = 0;
+		foreach( $group as $field_name => $required ){
+			$field = $this->_get_field_by_name( $field_name );
+			if( !$field ){
+				$incremental_count++;
+			}
+		}
+		return ( $total_count == $incremental_count ) ? true : false;
+	}
 	private function _set_field_value( $field, $field_value ){
 		return ( $field->set_value( $field_value ) ) ? $this->_get_field_value( $field ) : false;
 	}

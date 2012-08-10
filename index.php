@@ -36,4 +36,10 @@ $transaction->field('credit_card_month', '01');
 $transaction->field('credit_card_year', '2012');
 $transaction->field('credit_card_type', 'VISA');
 
-echo $transaction->get_log_entry();
+$transaction->field('comment', 'This is my comment.');
+
+//$transaction->field('ach_routing_number', '12345678');
+
+
+
+echo $transaction->commit();
