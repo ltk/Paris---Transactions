@@ -287,7 +287,22 @@ class Transaction {
 		
 		if( ( $desired_number_of_fields == $actual_number_of_fields )
 			&& ( get_class( end( $this->fields ) ) == 'TransactionField' ) ) {
-			return $this->_get_field_value( $field );
+			return true; //$this->_get_field_value( $field );
+		} else {
+			return false;
+		}
+	}
+
+	public function add_fields( $fields_array ){
+		$errors = array();
+
+		if( !empty( $fields_array ) ){
+			foreach( $fields_array as $field_name => $field_value ){
+				if( !$this->_add_field( $field_name, $field_value ) ){
+					array_push($errors, $field_name);
+				}
+			}
+			return empty( $errors ) ? true : false;
 		} else {
 			return false;
 		}
