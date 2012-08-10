@@ -18,8 +18,8 @@ $transaction = new WaitlistTransaction();
 
 // $transaction->add_fields( $transaction_data );
 
-$transaction->field('_blank', '');
-$transaction->field('facility_id', '44');
+//$transaction->field('_blank', '');
+$transaction->field('facility_id', '^^44');
 $transaction->field('account_name', 'Jake');
 $transaction->field('address_1', '3214 O St NW');
 $transaction->field('address_2', 'Floor 2');

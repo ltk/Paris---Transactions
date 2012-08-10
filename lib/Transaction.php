@@ -66,7 +66,9 @@ class Transaction {
 	 */
 	private $log_fields = array();
 
-	private $log_separator = "^^";
+	private $log_field_delimiter = "^^";
+	private $log_field_delimiter_replacement = "**"; //If the delimiter is found in a field value, replace it with this unless the field is wrapped
+	private $log_field_wrapper = null; //Set to null if fields are not to be wrapped by a string (like a " or ').
 
 
 	/**
@@ -172,14 +174,14 @@ class Transaction {
 			$group = $this->log_entry_field_groups[$i];
 			if(!empty($group)){
 				foreach($group as $field_name => $required){
-					$entry .= $this->log_separator;
+					$entry .= $this->log_field_delimiter;
 					try {
 						
 						$field = $this->_get_field_by_name( $field_name );
 						if( !$field && $required ){
 							throw new Exception;
 						} elseif( $field ) {
-							$entry .= $this->_get_field_value( $field );
+							$entry .= $this->_get_loggified_field_value( $field );
 						}	
 						
 					} catch( Exception $e ) {
@@ -199,6 +201,25 @@ class Transaction {
 
 	private function _get_field_value( $field ){
 		return $field->value();
+	}
+
+	private function _get_loggified_field_value( $field ){
+		$field_value = $this->_get_field_value( $field );
+
+		if( $field_value ){
+			if( !is_null( $this->log_field_wrapper ) ){
+				return sprintf(
+					"%s%s%s",
+					$this->log_field_wrapper,
+					$field_value,
+					$this->log_field_wrapper
+					);
+			} else {
+				return str_replace($this->log_field_delimiter, $this->log_field_delimiter_replacement, $field_value);
+			}
+		} else {
+			return false;
+		}
 	}
 
 	private function _add_field( $field_name, $field_value ){
