@@ -19,14 +19,14 @@ $transaction = new WaitlistTransaction();
 // $transaction->add_fields( $transaction_data );
 
 //$transaction->field('_blank', '');
-$transaction->field('facility_id', '^^44');
-$transaction->field('account_name', 'Jake');
+$transaction->field('facility_id', '123');
+$transaction->field('account_name', 'Blah');
 $transaction->field('address_1', '3214 O St NW');
 $transaction->field('address_2', 'Floor 2');
 $transaction->field('address_3', '');
-$transaction->field('city', 'Washington');
-$transaction->field('state', 'DC');
-$transaction->field('zip', '20007');
+$transaction->field('city', 'New York');
+$transaction->field('state', 'NW');
+$transaction->field('zip', '10001');
 $transaction->field('phone', '(203) 333-2850');
 $transaction->field('email_address', 'tbruffy@thejakegroup.com');
 
@@ -36,10 +36,15 @@ $transaction->field('credit_card_month', '01');
 $transaction->field('credit_card_year', '2012');
 $transaction->field('credit_card_type', 'VISA');
 
-$transaction->field('comment', 'This is my comment.');
+$transaction->field('comment', 'This is a much longer comment... woo hoo!.');
 
 //$transaction->field('ach_routing_number', '12345678');
 
 
 
-echo $transaction->commit();
+if( $transaction->commit() ){
+	echo 'Huzzah!';
+} else {
+	echo 'There was an error. Your transaction was not processed.';
+	echo "<pre>" . print_r( $transaction->get_errors(), true ) . "</pre>";
+}

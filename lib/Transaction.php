@@ -8,7 +8,7 @@ class Transaction {
 	 * @var string
 	 * @access private
 	 */
-	private $log_file = null;
+	private $log_file = '/../transactions.txt';
 
 	/**
 	 * The integer transaction type code.
@@ -70,6 +70,7 @@ class Transaction {
 	private $log_field_delimiter_replacement = "**"; //If the delimiter is found in a field value, replace it with this unless the field is wrapped
 	private $log_field_wrapper = null; //Set to null if fields are not to be wrapped by a string (like a " or ').
 
+	private $errors = array();
 
 	/**
 	 * Checks that a string contains something other than whitespace
@@ -152,18 +153,40 @@ class Transaction {
 			 */
 		}
 	}
-
+	private function _add_error( $error ){
+		array_push( $this->errors, $error );
+	}
+	public function get_errors(){
+		return $this->errors;
+	}
 	public function commit(){
 		$entry = $this->get_log_entry();
 		if( is_a( $entry, "Exception" ) ){
-			return 'There was a problem with the transaction. Please try again.';
+			$error_msg = 'There was a problem with the transaction data.';
+			$this->_add_error( $error_msg );
+			return false;
 		} else {
 			return $this->_write_to_log( $entry );
 		}
 	}
 
 	private function  _write_to_log( $entry ){
-		return "The following entry was written to the log file:<br/>$entry";
+		if( is_file( __DIR__ . $this->log_file ) ){
+			$log_file = fopen( __DIR__ . $this->log_file, 'a' );
+			if( $log_file ){
+				if( fwrite( $log_file, $entry . "\r\n" ) ){
+					fclose( $log_file );
+					return true;
+				} else {
+					$this->_add_error( 'The transaction could not be written to the log file. ' );
+				}
+			} else {
+				$this->_add_error( 'The log file could not be opened.' );
+			}
+		} else {
+			$this->_add_error( 'The log file could not be found. ' );	
+		}
+		return false;
 	}
 
 	public function get_log_entry(){
