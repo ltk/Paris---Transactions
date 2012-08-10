@@ -1,5 +1,6 @@
 <?php
 require_once('TransactionField.php');
+require_once('PHPMailer.php');
 
 class Transaction {
 	/**
@@ -153,9 +154,7 @@ class Transaction {
 			 */
 		}
 	}
-	private function _add_error( $error ){
-		array_push( $this->errors, $error );
-	}
+	
 	public function get_errors(){
 		return $this->errors;
 	}
@@ -168,25 +167,6 @@ class Transaction {
 		} else {
 			return $this->_write_to_log( $entry );
 		}
-	}
-
-	private function  _write_to_log( $entry ){
-		if( is_file( __DIR__ . $this->log_file ) ){
-			$log_file = fopen( __DIR__ . $this->log_file, 'a' );
-			if( $log_file ){
-				if( fwrite( $log_file, $entry . "\r\n" ) ){
-					fclose( $log_file );
-					return true;
-				} else {
-					$this->_add_error( 'The transaction could not be written to the log file. ' );
-				}
-			} else {
-				$this->_add_error( 'The log file could not be opened.' );
-			}
-		} else {
-			$this->_add_error( 'The log file could not be found. ' );	
-		}
-		return false;
 	}
 
 	public function get_log_entry(){
@@ -239,6 +219,49 @@ class Transaction {
 
 		return $entry;
 	}
+	
+
+	
+
+	public function add_fields( $fields_array ){
+		$errors = array();
+
+		if( !empty( $fields_array ) ){
+			foreach( $fields_array as $field_name => $field_value ){
+				if( !$this->_add_field( $field_name, $field_value ) ){
+					array_push($errors, $field_name);
+				}
+			}
+			return empty( $errors ) ? true : false;
+		} else {
+			return false;
+		}
+	}
+
+	private function _add_error( $error ){
+		array_push( $this->errors, $error );
+	}
+
+	private function  _write_to_log( $entry ){
+		if( is_file( __DIR__ . $this->log_file ) ){
+			$log_file = fopen( __DIR__ . $this->log_file, 'a' );
+			if( $log_file ){
+				if( fwrite( $log_file, $entry . "\r\n" ) ){
+					fclose( $log_file );
+					$this->_send_email_notification();
+					return true;
+				} else {
+					$this->_add_error( 'The transaction could not be written to the log file. ' );
+				}
+			} else {
+				$this->_add_error( 'The log file could not be opened.' );
+			}
+		} else {
+			$this->_add_error( 'The log file could not be found. ' );	
+		}
+		return false;
+	}
+
 	private function _is_group_empty( $group ){
 		$total_count = count( $group );
 
@@ -288,21 +311,6 @@ class Transaction {
 		if( ( $desired_number_of_fields == $actual_number_of_fields )
 			&& ( get_class( end( $this->fields ) ) == 'TransactionField' ) ) {
 			return true; //$this->_get_field_value( $field );
-		} else {
-			return false;
-		}
-	}
-
-	public function add_fields( $fields_array ){
-		$errors = array();
-
-		if( !empty( $fields_array ) ){
-			foreach( $fields_array as $field_name => $field_value ){
-				if( !$this->_add_field( $field_name, $field_value ) ){
-					array_push($errors, $field_name);
-				}
-			}
-			return empty( $errors ) ? true : false;
 		} else {
 			return false;
 		}
@@ -369,6 +377,36 @@ class Transaction {
 			}
 		}
 		return $this->required_field_group_level;
+	}
+
+	private function _send_email_notification(){
+		$pre_message = "<h1>New Transaction from Paris</h1>";
+		$body 			  = $pre_message . $this->_pretty_html_fields();
+
+		$mail             = new PHPMailer(); // defaults to using php "mail()"
+		$mail->SetFrom("info@thejakegroup.com","Jake Admin");
+		$mail->AddReplyTo("info@thejakegroup.com","Jake Admin");
+		$to_address = "lawson.kurtz@gmail.com";
+		$mail->AddAddress($to_address, "Lawson Kurtz");
+		$mail->Subject    = "New Transaction";
+		$mail->AltBody    = "To view the message, please use an HTML compatible email viewer!"; // optional, comment out and test
+		$mail->MsgHTML($body);
+
+		return $mail->Send();
+	}
+
+	private function _pretty_html_fields(){
+		$html = "";
+		if( !empty( $this->fields ) ){
+			foreach( $this->fields as $field ) {
+				$html .= sprintf("<p><strong>%s</strong>: %s</p>",
+					$field->name(),
+					$field->value()
+					);
+			}
+			return $html;
+		}
+		return false;
 	}
 
 

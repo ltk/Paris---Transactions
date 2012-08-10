@@ -6,7 +6,7 @@ $transaction = new WaitlistTransaction();
 
 $transaction_data = array(
 	'facility_id' => 123,
-	'account_name' => 'Duke',
+	'account_name' => '^^Duke',
 	'address_1' => '3214 Biltmore St',
 	'address_2' => 'Floor 2',
 	'city' => 'Washington',

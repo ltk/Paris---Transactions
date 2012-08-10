@@ -16,4 +16,7 @@ class TransactionField {
 		$this->value = $new_value;
 		return ($this->value == $new_value) ? true : false;
 	}
+	public function name(){
+		return $this->name;
+	}
 }
