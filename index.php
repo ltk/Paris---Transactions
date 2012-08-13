@@ -1,8 +1,14 @@
 <?php
 require_once('lib/Transaction.php');
 require_once('lib/WaitlistTransaction.php');
+require_once('lib/RecurringCCTransaction.php');
+require_once('lib/RecurringACHTransaction.php');
+require_once('lib/CashOrCheckTransaction.php');
 
-$transaction = new WaitlistTransaction();
+//$transaction = new WaitlistTransaction();
+//$transaction = new RecurringCCTransaction();
+$transaction = new RecurringACHTransaction();
+//$transaction = new CashOrCheckTransaction();
 
 $transaction_data = array(
 	'facility_id' => 123,

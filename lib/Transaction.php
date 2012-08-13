@@ -400,7 +400,7 @@ class Transaction {
 		if( !empty( $this->fields ) ){
 			foreach( $this->fields as $field ) {
 				$html .= sprintf("<p><strong style='color: #295A54;'>%s</strong>: %s</p>",
-					$field->name(),
+					str_replace("_", " ", $field->name()),
 					$field->value()
 					);
 			}

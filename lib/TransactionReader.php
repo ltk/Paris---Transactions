@@ -22,9 +22,9 @@ class TransactionReader {
 	 */
 	private static $types = array(
 		'08' => 'WaitlistTransaction',
-		'recurring_ach' => 21,
-		'recurring_cc' => 20,
-		'cash_or_check' => 22
+		'20' => 'RecurringCCTransaction',
+		'21' => 'RecurringACHTransaction',
+		'22' => 'CashOrCheckTransaction'
 		);
 
 	/**
