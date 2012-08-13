@@ -49,6 +49,7 @@ $transaction->add_fields( $transaction_data );
 
 
 if( $transaction->commit() ){
+	$this->send_notifications();
 	echo 'Thank You. Your transaction has been processed.';
 } else {
 	echo 'There was an error. Your transaction was not processed.';

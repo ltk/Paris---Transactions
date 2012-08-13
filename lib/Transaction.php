@@ -65,7 +65,7 @@ class Transaction {
 	 * @var array
 	 * @access private
 	 */
-	private $log_fields = array();
+	//private $log_fields = array();
 
 	public $log_field_delimiter = "^^";
 	private $log_field_delimiter_replacement = "**"; //If the delimiter is found in a field value, replace it with this unless the field is wrapped
@@ -159,6 +159,11 @@ class Transaction {
 		return $this->errors;
 	}
 	public function commit(){
+		if( method_exists( $this, "_before_commit" ) ){
+			$status = $this->_before_commit();
+			if( $status === false ) { return false; }
+		}
+
 		$entry = $this->get_log_entry();
 		if( is_a( $entry, "Exception" ) ){
 			$error_msg = 'There was a problem with the transaction data.';
@@ -167,24 +172,27 @@ class Transaction {
 		} else {
 			return $this->_write_to_log( $entry );
 		}
+
 	}
 
 	public function get_log_entry(){
 		$string_type = strval($this->type);
 		$string_type = ( strlen($string_type) < 2 ) ? "0" . $string_type : $string_type;
 		
-		$entry = $string_type;
+		$entry = $string_type; //Let's get it started
 
 		$level = $this->_set_required_field_group_level();
 		
 		$errors = array();
 
-		for($i=0;$i<=$level;$i++){
+		for( $i = 0; $i <= $level; $i++ ) {
 			$group = $this->log_entry_field_groups[$i];
 			$group_errors = array();
-
-			if(!empty($group)){
-				if( $this->_is_group_empty( $group ) && $i != 0 ){
+			/**
+			 rename to schema and values
+			 */
+			if( ! empty( $group ) ) {
+				if( $this->_is_group_empty( $group ) && $i > $this->required_field_group_level ){
 					foreach($group as $field){
 						//Add the blank field
 						$entry .= $this->log_field_delimiter;
@@ -210,7 +218,7 @@ class Transaction {
 		 Kill the process before writing to the transaction file
 		 */
 		try {
-			if( !empty( $errors ) ){
+			if ( ! empty( $errors ) ){
 				throw new Exception( print_r( $errors, true ) );
 			}
 		} catch ( Exception $e ) {
@@ -248,7 +256,7 @@ class Transaction {
 			if( $log_file ){
 				if( fwrite( $log_file, $entry . "\r\n" ) ){
 					fclose( $log_file );
-					$this->_send_email_notification();
+					//this->_send_email_notification();
 					return true;
 				} else {
 					$this->_add_error( 'The transaction could not be written to the log file. ' );
@@ -301,7 +309,7 @@ class Transaction {
 		}
 	}
 
-	private function _add_field( $field_name, $field_value ){
+	private function _add_field( $field_name, $field_value ) {
 		$field = new TransactionField( $field_name, $field_value );
 
 		$desired_number_of_fields = count( $this->fields ) + 1;
@@ -363,12 +371,12 @@ class Transaction {
 		$field_group_count = count( $this->log_entry_field_groups );
 		$field_groups = array_reverse( $this->log_entry_field_groups );
 
-		foreach( $field_groups as $field_group_key => $field_group ){
+		foreach( $field_groups as $field_group_index => $field_group ){
 			if( !empty( $field_group ) ){
 				foreach( $field_group as $field_name => $required ){
 					$field = $this->_get_field_by_name( $field_name );
 					if( $field && $field->value() ){
-						$level = ( $field_group_count - $field_group_key - 1 );
+						$level = ( $field_group_count - $field_group_index - 1 );
 						if( $level > $this->required_field_group_level ){
 							$this->required_field_group_level = $level;
 						}
@@ -379,21 +387,21 @@ class Transaction {
 		return $this->required_field_group_level;
 	}
 
-	private function _send_email_notification(){
-		$pre_message = "<h3 style='color: #295A54;'>Colonial Parking On-line Account Request</h3><p>A request has been made for access to our Colonial Online Customer Care Center. The request was made for:</p>";
-		$body 			  = $pre_message . $this->pretty_html_fields();
+	// private function _send_email_notification(){
+	// 	$pre_message = "<h3 style='color: #295A54;'>Colonial Parking On-line Account Request</h3><p>A request has been made for access to our Colonial Online Customer Care Center. The request was made for:</p>";
+	// 	$body 			  = $pre_message . $this->pretty_html_fields();
 
-		$mail             = new PHPMailer(); // defaults to using php "mail()"
-		$mail->SetFrom("info@thejakegroup.com","Jake Admin");
-		$mail->AddReplyTo("info@thejakegroup.com","Jake Admin");
-		$to_address = "lawson.kurtz@gmail.com";
-		$mail->AddAddress($to_address, "Lawson Kurtz");
-		$mail->Subject    = "New Transaction";
-		$mail->AltBody    = "To view the message, please use an HTML compatible email viewer!"; // optional, comment out and test
-		$mail->MsgHTML($body);
+	// 	$mail             = new PHPMailer(); // defaults to using php "mail()"
+	// 	$mail->SetFrom("info@thejakegroup.com","Jake Admin");
+	// 	$mail->AddReplyTo("info@thejakegroup.com","Jake Admin");
+	// 	$to_address = "lawson.kurtz@gmail.com";
+	// 	$mail->AddAddress($to_address, "Lawson Kurtz");
+	// 	$mail->Subject    = "New Transaction";
+	// 	$mail->AltBody    = "To view the message, please use an HTML compatible email viewer!"; // optional, comment out and test
+	// 	$mail->MsgHTML($body);
 
-		return $mail->Send();
-	}
+	// 	return $mail->Send();
+	// }
 
 	public function pretty_html_fields(){
 		$html = "";
