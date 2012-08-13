@@ -67,7 +67,7 @@ class Transaction {
 	 */
 	private $log_fields = array();
 
-	private $log_field_delimiter = "^^";
+	public $log_field_delimiter = "^^";
 	private $log_field_delimiter_replacement = "**"; //If the delimiter is found in a field value, replace it with this unless the field is wrapped
 	private $log_field_wrapper = null; //Set to null if fields are not to be wrapped by a string (like a " or ').
 
@@ -187,7 +187,7 @@ class Transaction {
 				if( $this->_is_group_empty( $group ) && $i != 0 ){
 					foreach($group as $field){
 						//Add the blank field
-						$entry .= $this->log_field_delimiter . $this->log_field_delimiter;
+						$entry .= $this->log_field_delimiter;
 					}
 				} else {
 					foreach($group as $field_name => $required){
@@ -381,7 +381,7 @@ class Transaction {
 
 	private function _send_email_notification(){
 		$pre_message = "<h3 style='color: #295A54;'>Colonial Parking On-line Account Request</h3><p>A request has been made for access to our Colonial Online Customer Care Center. The request was made for:</p>";
-		$body 			  = $pre_message . $this->_pretty_html_fields();
+		$body 			  = $pre_message . $this->pretty_html_fields();
 
 		$mail             = new PHPMailer(); // defaults to using php "mail()"
 		$mail->SetFrom("info@thejakegroup.com","Jake Admin");
@@ -395,7 +395,7 @@ class Transaction {
 		return $mail->Send();
 	}
 
-	private function _pretty_html_fields(){
+	public function pretty_html_fields(){
 		$html = "";
 		if( !empty( $this->fields ) ){
 			foreach( $this->fields as $field ) {
@@ -408,6 +408,5 @@ class Transaction {
 		}
 		return false;
 	}
-
 
 }

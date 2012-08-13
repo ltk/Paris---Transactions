@@ -2,7 +2,7 @@
 class WaitlistTransaction extends Transaction {
 	protected $type = 8;
 
-	protected $log_entry_field_groups = array(
+	public $log_entry_field_groups = array(
 		//Don't include Transaction Type
 		array(
 			'timestamp' => true,
