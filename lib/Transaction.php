@@ -380,7 +380,7 @@ class Transaction {
 	}
 
 	private function _send_email_notification(){
-		$pre_message = "<h1>New Transaction from Paris</h1>";
+		$pre_message = "<h3 style='color: #295A54;'>Colonial Parking On-line Account Request</h3><p>A request has been made for access to our Colonial Online Customer Care Center. The request was made for:</p>";
 		$body 			  = $pre_message . $this->_pretty_html_fields();
 
 		$mail             = new PHPMailer(); // defaults to using php "mail()"
@@ -399,7 +399,7 @@ class Transaction {
 		$html = "";
 		if( !empty( $this->fields ) ){
 			foreach( $this->fields as $field ) {
-				$html .= sprintf("<p><strong>%s</strong>: %s</p>",
+				$html .= sprintf("<p><strong style='color: #295A54;'>%s</strong>: %s</p>",
 					$field->name(),
 					$field->value()
 					);
